@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: Homebrew/actions/setup-homebrew@master
+      - uses: Homebrew/actions/setup-homebrew@main
 
       - name: Check hosted Apple Actions guard
         run: |
@@ -100,3 +100,6 @@ jobs:
         run: |
           set -euo pipefail
           brew uninstall --force --formula jskoiz/imx/imx || true
+          if brew tap | grep -qx 'jskoiz/imx'; then
+            brew untap jskoiz/imx
+          fi
