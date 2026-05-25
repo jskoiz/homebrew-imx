@@ -36,7 +36,9 @@ jobs:
       - name: Tap local checkout
         run: |
           set -euo pipefail
-          brew untap jskoiz/imx || true
+          if brew tap | grep -qx 'jskoiz/imx'; then
+            brew untap jskoiz/imx
+          fi
           brew update-reset
           brew tap jskoiz/imx "$GITHUB_WORKSPACE"
           brew tap-info jskoiz/imx
