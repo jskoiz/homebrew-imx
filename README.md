@@ -25,9 +25,10 @@ No Homebrew/core submission, Linux arm64 archive, Windows archive, crates.io
 package, new image format, MagickCore/MagickWand API, or full ImageMagick CLI
 compatibility is claimed by this tap.
 
-Tap GitHub Actions run on Linux only. macOS install proof must be run locally or
-manually after explicit approval; normal pushes, pull requests, schedules, and
-tap updates must not trigger hosted macOS or iOS runners.
+Tap GitHub Actions run a Linux-only formula/archive smoke. macOS install proof
+must be run locally or manually after explicit approval; normal pushes, pull
+requests, schedules, and tap updates must not trigger hosted macOS or iOS
+runners.
 
 ## Smoke Test
 

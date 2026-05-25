@@ -19,87 +19,71 @@ on:
 
 jobs:
   smoke:
-    name: Smoke linux-x86_64
+    name: Formula archive smoke linux-x86_64
     runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v6
-
-      - uses: Homebrew/actions/setup-homebrew@main
 
       - name: Check hosted Apple Actions guard
         run: |
           set -euo pipefail
           bash scripts/check-no-hosted-apple-actions.sh
 
-      - name: Tap local checkout
+      - name: Validate formula syntax
         run: |
           set -euo pipefail
-          if brew tap | grep -qx 'jskoiz/imx'; then
-            brew untap jskoiz/imx
-          fi
-          brew update-reset
-          brew tap jskoiz/imx "$GITHUB_WORKSPACE"
-          brew tap-info jskoiz/imx
+          ruby -c Formula/imx.rb
 
-      - name: Audit formula
+      - name: Fetch and verify Linux archive from formula
         run: |
           set -euo pipefail
-          brew audit --strict --online jskoiz/imx/imx
-
-      - name: Install and test formula
-        run: |
-          set -euo pipefail
-          case "$(uname -s):$(uname -m)" in
-            Linux:x86_64) expected_target="x86_64-unknown-linux-gnu" ;;
-            *)
-              echo "unsupported smoke host: $(uname -s) $(uname -m)" >&2
-              exit 2
-              ;;
-          esac
-          brew fetch --force --verbose jskoiz/imx/imx 2>&1 | tee imx-brew-fetch.log
-          grep "imx-preview-0.4.0-${expected_target}.tar.gz" imx-brew-fetch.log
-          brew install --formula jskoiz/imx/imx
-          imx --version | tee imx-version.txt
+          archive_url="$(
+            awk '/on_linux do/{in_linux=1} in_linux && /url "/ { gsub(/.*url "/, ""); gsub(/".*/, ""); print; exit }' Formula/imx.rb
+          )"
+          archive_sha="$(
+            awk '/on_linux do/{in_linux=1} in_linux && /sha256 "/ { gsub(/.*sha256 "/, ""); gsub(/".*/, ""); print; exit }' Formula/imx.rb
+          )"
+          test -n "$archive_url"
+          test -n "$archive_sha"
+          grep -F 'imx-preview-0.4.0-x86_64-unknown-linux-gnu.tar.gz' <<<"$archive_url"
+          curl --retry 8 --retry-delay 3 --retry-all-errors -fsSL "$archive_url" -o imx.tar.gz
+          printf '%s  imx.tar.gz\n' "$archive_sha" | sha256sum -c -
+          mkdir -p extract
+          tar -xzf imx.tar.gz -C extract
+          binary="$(find extract -type f -name imx -perm -111 | head -n 1)"
+          test -n "$binary"
+          "$binary" --version | tee imx-version.txt
           grep -Fx 'imx 0.4.0' imx-version.txt
-          brew test jskoiz/imx/imx
 
-      - name: Verify installed binary linkage
+      - name: Verify archive binary linkage
         run: |
           set -euo pipefail
-          binary="$(brew --prefix)/bin/imx"
+          binary="$(find extract -type f -name imx -perm -111 | head -n 1)"
           ldd "$binary" | tee imx-linkage.txt
           ! grep -E 'Magick(Core|Wand)|ImageMagick' imx-linkage.txt
 
-      - name: Smoke installed binary
+      - name: Smoke archive binary
         run: |
           set -euo pipefail
+          binary="$(find extract -type f -name imx -perm -111 | head -n 1)"
           work_dir="$(mktemp -d)"
           trap 'rm -rf "$work_dir"' EXIT
           printf 'P3\n2 1\n255\n255 0 0 0 0 255\n' >"$work_dir/input.ppm"
-          imx identify "$work_dir/input.ppm" | tee "$work_dir/identify-ppm.txt"
+          "$binary" identify "$work_dir/input.ppm" | tee "$work_dir/identify-ppm.txt"
           grep -Fx 'format=PPM width=2 height=1 channels=RGB depth=8' "$work_dir/identify-ppm.txt"
-          imx "$work_dir/input.ppm" "$work_dir/output.qoi"
-          imx identify "$work_dir/output.qoi" | tee "$work_dir/identify-qoi.txt"
+          "$binary" "$work_dir/input.ppm" "$work_dir/output.qoi"
+          "$binary" identify "$work_dir/output.qoi" | tee "$work_dir/identify-qoi.txt"
           grep -Fx 'format=QOI width=2 height=1 channels=RGBA depth=8' "$work_dir/identify-qoi.txt"
-          imx "$work_dir/output.qoi" "$work_dir/output.ff"
-          imx identify "$work_dir/output.ff" | tee "$work_dir/identify-farbfeld.txt"
+          "$binary" "$work_dir/output.qoi" "$work_dir/output.ff"
+          "$binary" identify "$work_dir/output.ff" | tee "$work_dir/identify-farbfeld.txt"
           grep -Fx 'format=FARBFELD width=2 height=1 channels=RGBA depth=16' "$work_dir/identify-farbfeld.txt"
-          imx "$work_dir/output.ff" "$work_dir/output.pbm"
-          imx "$work_dir/output.ff" "$work_dir/output.pgm"
-          imx "$work_dir/output.ff" "$work_dir/output.ppm"
-          imx identify "$work_dir/output.pbm" | tee "$work_dir/identify-output-pbm.txt"
-          imx identify "$work_dir/output.pgm" | tee "$work_dir/identify-output-pgm.txt"
-          imx identify "$work_dir/output.ppm" | tee "$work_dir/identify-output-ppm.txt"
+          "$binary" "$work_dir/output.ff" "$work_dir/output.pbm"
+          "$binary" "$work_dir/output.ff" "$work_dir/output.pgm"
+          "$binary" "$work_dir/output.ff" "$work_dir/output.ppm"
+          "$binary" identify "$work_dir/output.pbm" | tee "$work_dir/identify-output-pbm.txt"
+          "$binary" identify "$work_dir/output.pgm" | tee "$work_dir/identify-output-pgm.txt"
+          "$binary" identify "$work_dir/output.ppm" | tee "$work_dir/identify-output-ppm.txt"
           grep -Fx 'format=PBM width=2 height=1 channels=GRAY depth=1' "$work_dir/identify-output-pbm.txt"
           grep -Fx 'format=PGM width=2 height=1 channels=GRAY depth=16' "$work_dir/identify-output-pgm.txt"
           grep -Fx 'format=PPM width=2 height=1 channels=RGB depth=8' "$work_dir/identify-output-ppm.txt"
-
-      - name: Uninstall formula
-        if: always()
-        run: |
-          set -euo pipefail
-          brew uninstall --force --formula jskoiz/imx/imx || true
-          if brew tap | grep -qx 'jskoiz/imx'; then
-            brew untap jskoiz/imx
-          fi
