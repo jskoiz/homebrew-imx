@@ -5,9 +5,17 @@ on:
   push:
     branches:
       - main
+    paths:
+      - Formula/imx.rb
+      - .github/workflows/tap-smoke.yml
   pull_request:
     branches:
       - main
+    paths:
+      - Formula/imx.rb
+      - .github/workflows/tap-smoke.yml
+  schedule:
+    - cron: "22 11 * * 1"
 
 jobs:
   smoke:
@@ -17,6 +25,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: linux-x86_64
+            runner: ubuntu-24.04
           - name: macos-aarch64
             runner: macos-15
           - name: macos-x86_64
@@ -25,24 +35,50 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Prepare Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
       - name: Tap local checkout
         run: |
           set -euo pipefail
+          brew update-reset
           brew tap jskoiz/imx "$GITHUB_WORKSPACE"
           brew tap-info jskoiz/imx
 
       - name: Audit formula
         run: |
           set -euo pipefail
-          brew audit --strict jskoiz/imx/imx
+          brew audit --strict --online jskoiz/imx/imx
 
       - name: Install and test formula
         run: |
           set -euo pipefail
-          brew install jskoiz/imx/imx
+          case "$(uname -s):$(uname -m)" in
+            Darwin:arm64|Darwin:aarch64) expected_target="aarch64-apple-darwin" ;;
+            Darwin:x86_64) expected_target="x86_64-apple-darwin" ;;
+            Linux:x86_64) expected_target="x86_64-unknown-linux-gnu" ;;
+            *)
+              echo "unsupported smoke host: $(uname -s) $(uname -m)" >&2
+              exit 2
+              ;;
+          esac
+          brew fetch --force --verbose jskoiz/imx/imx 2>&1 | tee imx-brew-fetch.log
+          grep "imx-preview-0.4.0-${expected_target}.tar.gz" imx-brew-fetch.log
+          brew install --formula jskoiz/imx/imx
           imx --version | tee imx-version.txt
           grep -Fx 'imx 0.4.0' imx-version.txt
           brew test jskoiz/imx/imx
+
+      - name: Verify installed binary linkage
+        run: |
+          set -euo pipefail
+          binary="$(brew --prefix)/bin/imx"
+          if [[ "$(uname -s)" == "Darwin" ]]; then
+            otool -L "$binary" | tee imx-linkage.txt
+          else
+            ldd "$binary" | tee imx-linkage.txt
+          fi
+          ! grep -E 'Magick(Core|Wand)|ImageMagick' imx-linkage.txt
 
       - name: Smoke installed binary
         run: |
@@ -55,3 +91,21 @@ jobs:
           imx "$work_dir/input.ppm" "$work_dir/output.qoi"
           imx identify "$work_dir/output.qoi" | tee "$work_dir/identify-qoi.txt"
           grep -Fx 'format=QOI width=2 height=1 channels=RGB depth=8' "$work_dir/identify-qoi.txt"
+          imx "$work_dir/output.qoi" "$work_dir/output.ff"
+          imx identify "$work_dir/output.ff" | tee "$work_dir/identify-farbfeld.txt"
+          grep -Fx 'format=FARBFELD width=2 height=1 channels=RGBA depth=16' "$work_dir/identify-farbfeld.txt"
+          imx "$work_dir/output.ff" "$work_dir/output.pbm"
+          imx "$work_dir/output.ff" "$work_dir/output.pgm"
+          imx "$work_dir/output.ff" "$work_dir/output.ppm"
+          imx identify "$work_dir/output.pbm" | tee "$work_dir/identify-output-pbm.txt"
+          imx identify "$work_dir/output.pgm" | tee "$work_dir/identify-output-pgm.txt"
+          imx identify "$work_dir/output.ppm" | tee "$work_dir/identify-output-ppm.txt"
+          grep -Fx 'format=PBM width=2 height=1 channels=GRAY depth=1' "$work_dir/identify-output-pbm.txt"
+          grep -Fx 'format=PGM width=2 height=1 channels=GRAY depth=16' "$work_dir/identify-output-pgm.txt"
+          grep -Fx 'format=PPM width=2 height=1 channels=RGB depth=8' "$work_dir/identify-output-ppm.txt"
+
+      - name: Uninstall formula
+        if: always()
+        run: |
+          set -euo pipefail
+          brew uninstall --force --formula jskoiz/imx/imx || true
