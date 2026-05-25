@@ -200,7 +200,7 @@ while IFS=$'\t' read -r target url sha; do
   run_binary identify "$smoke_dir/output.pbm" | tee "$smoke_dir/identify-output-pbm.txt"
   grep -Fx 'format=PBM width=2 height=2 channels=GRAY depth=1' "$smoke_dir/identify-output-pbm.txt"
   run_binary identify "$smoke_dir/output.pgm" | tee "$smoke_dir/identify-output-pgm.txt"
-  grep -Fx 'format=PGM width=2 height=2 channels=GRAY depth=8' "$smoke_dir/identify-output-pgm.txt"
+  grep -Fx 'format=PGM width=2 height=2 channels=GRAY depth=16' "$smoke_dir/identify-output-pgm.txt"
   run_binary identify "$smoke_dir/output.ppm" | tee "$smoke_dir/identify-output-ppm.txt"
   grep -Fx 'format=PPM width=2 height=2 channels=RGB depth=8' "$smoke_dir/identify-output-ppm.txt"
   run_binary identify "$smoke_dir/rewrite.ff" | tee "$smoke_dir/identify-rewrite-farbfeld.txt"
