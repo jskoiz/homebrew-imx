@@ -52,6 +52,8 @@ jobs:
 
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@main
+        env:
+          GITHUB_ACTIONS_HOMEBREW_SELF_HOSTED: 1
 
       - name: Install and test formula
         run: |
