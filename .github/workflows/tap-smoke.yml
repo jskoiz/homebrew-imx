@@ -7,19 +7,21 @@ on:
       - main
     paths:
       - Formula/imx.rb
+      - scripts/**
       - .github/workflows/tap-smoke.yml
   pull_request:
     branches:
       - main
     paths:
       - Formula/imx.rb
+      - scripts/**
       - .github/workflows/tap-smoke.yml
   schedule:
     - cron: "22 11 * * 1"
 
 jobs:
   smoke:
-    name: Formula archive smoke linux-x86_64
+    name: Formula archive smoke linux
     runs-on: ubuntu-24.04
 
     steps:
@@ -35,55 +37,15 @@ jobs:
           set -euo pipefail
           ruby -c Formula/imx.rb
 
-      - name: Fetch and verify Linux archive from formula
+      - name: Install optional Linux arm64 validation dependencies
         run: |
           set -euo pipefail
-          archive_url="$(
-            awk '/on_linux do/{in_linux=1} in_linux && /url "/ { gsub(/.*url "/, ""); gsub(/".*/, ""); print; exit }' Formula/imx.rb
-          )"
-          archive_sha="$(
-            awk '/on_linux do/{in_linux=1} in_linux && /sha256 "/ { gsub(/.*sha256 "/, ""); gsub(/".*/, ""); print; exit }' Formula/imx.rb
-          )"
-          test -n "$archive_url"
-          test -n "$archive_sha"
-          grep -F 'imx-preview-0.4.0-x86_64-unknown-linux-gnu.tar.gz' <<<"$archive_url"
-          curl --retry 8 --retry-delay 3 --retry-all-errors -fsSL "$archive_url" -o imx.tar.gz
-          printf '%s  imx.tar.gz\n' "$archive_sha" | sha256sum -c -
-          mkdir -p extract
-          tar -xzf imx.tar.gz -C extract
-          binary="$(find extract -type f -name imx -perm -111 | head -n 1)"
-          test -n "$binary"
-          "$binary" --version | tee imx-version.txt
-          grep -Fx 'imx 0.4.0' imx-version.txt
+          if grep -Fq 'aarch64-unknown-linux-gnu' Formula/imx.rb; then
+            sudo apt-get update -y
+            sudo apt-get install -y binutils-aarch64-linux-gnu qemu-user
+          fi
 
-      - name: Verify archive binary linkage
+      - name: Verify Linux formula archives
         run: |
           set -euo pipefail
-          binary="$(find extract -type f -name imx -perm -111 | head -n 1)"
-          ldd "$binary" | tee imx-linkage.txt
-          ! grep -E 'Magick(Core|Wand)|ImageMagick' imx-linkage.txt
-
-      - name: Smoke archive binary
-        run: |
-          set -euo pipefail
-          binary="$(find extract -type f -name imx -perm -111 | head -n 1)"
-          work_dir="$(mktemp -d)"
-          trap 'rm -rf "$work_dir"' EXIT
-          printf 'P3\n2 1\n255\n255 0 0 0 0 255\n' >"$work_dir/input.ppm"
-          "$binary" identify "$work_dir/input.ppm" | tee "$work_dir/identify-ppm.txt"
-          grep -Fx 'format=PPM width=2 height=1 channels=RGB depth=8' "$work_dir/identify-ppm.txt"
-          "$binary" "$work_dir/input.ppm" "$work_dir/output.qoi"
-          "$binary" identify "$work_dir/output.qoi" | tee "$work_dir/identify-qoi.txt"
-          grep -Fx 'format=QOI width=2 height=1 channels=RGBA depth=8' "$work_dir/identify-qoi.txt"
-          "$binary" "$work_dir/output.qoi" "$work_dir/output.ff"
-          "$binary" identify "$work_dir/output.ff" | tee "$work_dir/identify-farbfeld.txt"
-          grep -Fx 'format=FARBFELD width=2 height=1 channels=RGBA depth=16' "$work_dir/identify-farbfeld.txt"
-          "$binary" "$work_dir/output.ff" "$work_dir/output.pbm"
-          "$binary" "$work_dir/output.ff" "$work_dir/output.pgm"
-          "$binary" "$work_dir/output.ff" "$work_dir/output.ppm"
-          "$binary" identify "$work_dir/output.pbm" | tee "$work_dir/identify-output-pbm.txt"
-          "$binary" identify "$work_dir/output.pgm" | tee "$work_dir/identify-output-pgm.txt"
-          "$binary" identify "$work_dir/output.ppm" | tee "$work_dir/identify-output-ppm.txt"
-          grep -Fx 'format=PBM width=2 height=1 channels=GRAY depth=1' "$work_dir/identify-output-pbm.txt"
-          grep -Fx 'format=PGM width=2 height=1 channels=GRAY depth=16' "$work_dir/identify-output-pgm.txt"
-          grep -Fx 'format=PPM width=2 height=1 channels=RGB depth=8' "$work_dir/identify-output-ppm.txt"
+          bash scripts/verify-formula-archives.sh
