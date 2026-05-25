@@ -42,7 +42,7 @@ jobs:
           set -euo pipefail
           if grep -Fq 'aarch64-unknown-linux-gnu' Formula/imx.rb; then
             sudo apt-get update -y
-            sudo apt-get install -y binutils-aarch64-linux-gnu qemu-user
+            sudo apt-get install -y binutils-aarch64-linux-gnu libc6-arm64-cross libgcc-s1-arm64-cross qemu-user
           fi
 
       - name: Verify Linux formula archives

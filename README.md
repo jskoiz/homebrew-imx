@@ -11,19 +11,18 @@ brew install imx
 imx --version
 ```
 
-The `imx` formula installs the published IMX `v0.4.0` release archive for the
+The `imx` formula installs the published IMX `v0.5.0` release archive for the
 current supported platform and verifies the release archive checksum declared in
 the formula.
 
 Supported tap targets:
 
-- macOS arm64
-- macOS x86_64
 - Linux x86_64
+- Linux arm64
 
-No Homebrew/core submission, Linux arm64 tap support, Windows archive,
-crates.io package, new image format, MagickCore/MagickWand API, or full
-ImageMagick CLI compatibility is claimed by the current v0.4.0 tap formula.
+No Homebrew/core submission, macOS v0.5.0 tap support, Windows archive, crates.io
+package, new image format, MagickCore/MagickWand API, or full ImageMagick CLI
+compatibility is claimed by the current v0.5.0 tap formula.
 
 Tap GitHub Actions run a Linux-only formula/archive smoke. macOS install proof
 must be run locally or manually after explicit approval; normal pushes, pull
@@ -34,11 +33,10 @@ Tap updates are automation for the `jskoiz/homebrew-imx` tap only. They do not
 submit to Homebrew/core and must not trigger hosted macOS or iOS GitHub Actions;
 macOS tap proof remains local/manual unless explicitly approved.
 
-Linux arm64 may be added to the tap only after `Formula/imx.rb` contains a
-published Linux arm64 release archive `url` and matching `sha256` generated from
-the release `SHA256SUMS`, and the Linux-only tap smoke fetches and verifies that
-formula entry. Until then, Linux arm64 is a release-archive preview only, not a
-tap-supported platform.
+Linux arm64 tap support is generated from the published v0.5.0 `SHA256SUMS` and
+verified by Linux-only archive smoke. macOS tap support may be added only after a
+published macOS release archive exists and local/manual macOS proof is recorded
+after explicit approval.
 
 ## Smoke Test
 
@@ -47,8 +45,10 @@ brew test imx
 imx identify path/to/input.ppm
 ```
 
-The formula test identifies a small PPM fixture, transcodes it to QOI, and
-identifies the QOI output.
+The formula test identifies a small PPM fixture, transcodes it to QOI, identifies
+the QOI output, and checks a deterministic PPM same-format rewrite. The tap
+archive verifier additionally smokes FARBFELD, QOI, PBM, PGM, and PPM
+same-format rewrites.
 
 ## Update
 
@@ -61,8 +61,9 @@ scripts/update-imx-formula.sh v0.5.0
 The updater downloads the release `SHA256SUMS`, runs that release's formula
 generator, validates formula syntax, and checks that this tap still has no
 hosted Apple Actions references. If the generated formula includes Linux arm64,
-rerun on Linux with `IMX_UPDATE_VERIFY_ARCHIVES=1` so the archive URL, checksum,
-linkage, and smoke path are verified before the formula is written.
+rerun on Linux with `IMX_UPDATE_VERIFY_ARCHIVES=1` and the arm64 runtime smoke
+dependencies: `binutils-aarch64-linux-gnu`, `libc6-arm64-cross`,
+`libgcc-s1-arm64-cross`, and `qemu-user`.
 Set `IMX_UPDATE_BREW_STYLE=1` to run `brew style` as an additional local check.
 Set `IMX_GENERATOR_PATH=/path/to/generate-homebrew-formula.sh` only for local
 pre-release testing of a generator that has not been tagged yet.
