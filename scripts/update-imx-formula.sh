@@ -10,6 +10,15 @@ version="$1"
 if [[ "$version" != v* ]]; then
   version="v$version"
 fi
+formula_version="${version#v}"
+prefix_smoke_required=0
+if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+  major="${BASH_REMATCH[1]}"
+  minor="${BASH_REMATCH[2]}"
+  if ((major > 0 || minor >= 6)); then
+    prefix_smoke_required=1
+  fi
+fi
 
 repo="${IMX_REPO:-jskoiz/imx}"
 output="${IMX_FORMULA_OUTPUT:-Formula/imx.rb}"
@@ -55,6 +64,10 @@ bash "$work_dir/generate-homebrew-formula.sh" "$version" "$work_dir/SHA256SUMS" 
 ruby -c "$tmp_formula"
 if ! grep -Fq 'format=QOI width=2 height=1 channels=RGBA depth=8' "$tmp_formula"; then
   echo "error: generated formula does not contain the current QOI RGBA smoke expectation" >&2
+  exit 1
+fi
+if [[ "$prefix_smoke_required" == 1 ]] && ! grep -Fq 'PPM:input.ppm' "$tmp_formula"; then
+  echo "error: generated formula does not contain the v0.6 prefix smoke expectation" >&2
   exit 1
 fi
 bash scripts/check-no-hosted-apple-actions.sh
