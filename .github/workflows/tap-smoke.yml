@@ -49,3 +49,16 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/verify-formula-archives.sh
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Install and test formula
+        run: |
+          set -euo pipefail
+          expected_version="$(
+            ruby -ne 'if $_ =~ %r{/download/v([0-9]+\.[0-9]+\.[0-9]+)/}; puts Regexp.last_match(1); exit; end' Formula/imx.rb
+          )"
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install --formula ./Formula/imx.rb
+          HOMEBREW_NO_AUTO_UPDATE=1 brew test imx
+          test "$(imx --version)" = "imx $expected_version"
