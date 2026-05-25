@@ -19,19 +19,18 @@ on:
 
 jobs:
   smoke:
-    name: Smoke ${{ matrix.name }}
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: macos-aarch64
-            runner: macos-15
-          - name: macos-x86_64
-            runner: macos-15-intel
+    name: Smoke linux-x86_64
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v6
+
+      - uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Check hosted Apple Actions guard
+        run: |
+          set -euo pipefail
+          bash scripts/check-no-hosted-apple-actions.sh
 
       - name: Tap local checkout
         run: |
@@ -52,8 +51,6 @@ jobs:
         run: |
           set -euo pipefail
           case "$(uname -s):$(uname -m)" in
-            Darwin:arm64|Darwin:aarch64) expected_target="aarch64-apple-darwin" ;;
-            Darwin:x86_64) expected_target="x86_64-apple-darwin" ;;
             Linux:x86_64) expected_target="x86_64-unknown-linux-gnu" ;;
             *)
               echo "unsupported smoke host: $(uname -s) $(uname -m)" >&2
@@ -71,11 +68,7 @@ jobs:
         run: |
           set -euo pipefail
           binary="$(brew --prefix)/bin/imx"
-          if [[ "$(uname -s)" == "Darwin" ]]; then
-            otool -L "$binary" | tee imx-linkage.txt
-          else
-            ldd "$binary" | tee imx-linkage.txt
-          fi
+          ldd "$binary" | tee imx-linkage.txt
           ! grep -E 'Magick(Core|Wand)|ImageMagick' imx-linkage.txt
 
       - name: Smoke installed binary

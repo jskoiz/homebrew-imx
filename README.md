@@ -25,6 +25,10 @@ No Homebrew/core submission, Linux arm64 archive, Windows archive, crates.io
 package, new image format, MagickCore/MagickWand API, or full ImageMagick CLI
 compatibility is claimed by this tap.
 
+Tap GitHub Actions run on Linux only. macOS install proof must be run locally or
+manually after explicit approval; normal pushes, pull requests, schedules, and
+tap updates must not trigger hosted macOS or iOS runners.
+
 ## Smoke Test
 
 ```sh
@@ -40,6 +44,12 @@ identifies the QOI output.
 To refresh the tap after a future IMX release, update `Formula/imx.rb` with the
 new release archive URLs and SHA-256 values from the published `SHA256SUMS`
 asset in `jskoiz/imx`.
+
+Before pushing a tap update, run:
+
+```sh
+bash scripts/check-no-hosted-apple-actions.sh
+```
 
 ## Remove
 
