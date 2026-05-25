@@ -36,11 +36,12 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Prepare Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@main
 
       - name: Tap local checkout
         run: |
           set -euo pipefail
+          brew untap jskoiz/imx || true
           brew update-reset
           brew tap jskoiz/imx "$GITHUB_WORKSPACE"
           brew tap-info jskoiz/imx
