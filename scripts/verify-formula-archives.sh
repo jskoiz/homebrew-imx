@@ -237,6 +237,39 @@ PY
   run_binary "JPEG:$smoke_dir/oriented-o6.jpg" "PPM:$smoke_dir/oriented-o6.ppm"
   run_binary identify "PPM:$smoke_dir/oriented-o6.ppm" | tee "$smoke_dir/identify-orientation-ppm.txt"
   grep -Fx 'format=PPM width=1 height=2 channels=RGB depth=8' "$smoke_dir/identify-orientation-ppm.txt"
+  python3 - "$smoke_dir/progressive-rgb.jpg" "$smoke_dir/progressive-o6.jpg" <<'PY'
+import sys
+
+rgb_output, oriented_output = sys.argv[1:3]
+progressive_hex = (
+    "ffd8ffe000104a46494600010100000100010000ffdb004300030202020202030202020303030304060404040404080606050609080a0a090809090a0c0f0c0a0b0e0b09090d110d0e0f101011100a0c12131210130f101010"
+    "ffc20011080003000403012200021101031101ffc40015000101000000000000000000000000000000000008ffc400140101000000000000000000000000000000000000ffda000c03010002110311003f00b0a8e1ff00ffc400140101000000000000000000000000000000000000ffda0008010100010502d3ff00ffc400140101000000000000000000000000000000000000ffda0008010301013f01d3ff00ffc400140101000000000000000000000000000000000000ffda0008010201013f01d3ff00ffc400140101000000000000000000000000000000000000ffda0008010100063f02d3ff00ffc400140101000000000000000000000000000000000000ffda0008010100013f21d3ff00ffda000c03010002110311003f00b0a8e1ff00ffc400140101000000000000000000000000000000000000ffda0008010100010502d3ff00ffc400140101000000000000000000000000000000000000ffda0008010301013f01d3ff00ffc400140101000000000000000000000000000000000000ffda0008010201013f01d3ff00ffc400140101000000000000000000000000000000000000ffda0008010100063f02d3ff00ffc400140101000000000000000000000000000000000000ffda0008010100013f21d3ff00ffd9"
+)
+progressive = bytes.fromhex(progressive_hex)
+app1 = (
+    b"Exif\0\0MM\0*\0\0\0\x08"
+    + (1).to_bytes(2, "big")
+    + (0x0112).to_bytes(2, "big")
+    + (3).to_bytes(2, "big")
+    + (1).to_bytes(4, "big")
+    + (6).to_bytes(2, "big")
+    + b"\0\0"
+    + (0).to_bytes(4, "big")
+)
+segment = b"\xff\xe1" + (len(app1) + 2).to_bytes(2, "big") + app1
+open(rgb_output, "wb").write(progressive)
+open(oriented_output, "wb").write(progressive[:2] + segment + progressive[2:])
+PY
+  run_binary identify "JPEG:$smoke_dir/progressive-rgb.jpg" | tee "$smoke_dir/identify-progressive-jpeg.txt"
+  grep -Fx 'format=JPEG width=4 height=3 channels=RGB depth=8' "$smoke_dir/identify-progressive-jpeg.txt"
+  run_binary "JPEG:$smoke_dir/progressive-rgb.jpg" "PPM:$smoke_dir/progressive-rgb.ppm"
+  run_binary identify "PPM:$smoke_dir/progressive-rgb.ppm" | tee "$smoke_dir/identify-progressive-ppm.txt"
+  grep -Fx 'format=PPM width=4 height=3 channels=RGB depth=8' "$smoke_dir/identify-progressive-ppm.txt"
+  run_binary identify "JPEG:$smoke_dir/progressive-o6.jpg" | tee "$smoke_dir/identify-progressive-orientation-jpeg.txt"
+  grep -Fx 'format=JPEG width=3 height=4 channels=RGB depth=8' "$smoke_dir/identify-progressive-orientation-jpeg.txt"
+  run_binary "JPEG:$smoke_dir/progressive-o6.jpg" "PPM:$smoke_dir/progressive-o6.ppm"
+  run_binary identify "PPM:$smoke_dir/progressive-o6.ppm" | tee "$smoke_dir/identify-progressive-orientation-ppm.txt"
+  grep -Fx 'format=PPM width=3 height=4 channels=RGB depth=8' "$smoke_dir/identify-progressive-orientation-ppm.txt"
   run_binary "JPEG:$smoke_dir/output.jpg" "FARBFELD:$smoke_dir/jpeg-output.ff"
   run_binary identify "FARBFELD:$smoke_dir/jpeg-output.ff" | tee "$smoke_dir/identify-jpeg-output-farbfeld.txt"
   grep -Fx 'format=FARBFELD width=2 height=2 channels=RGBA depth=16' "$smoke_dir/identify-jpeg-output-farbfeld.txt"
