@@ -48,8 +48,8 @@ imx identify path/to/input.ppm
 The formula test identifies a small PPM fixture, transcodes it to QOI, checks
 exact `PPM:`, `QOI:`, and `FARBFELD:` prefixes, and checks a deterministic PPM
 same-format rewrite. The tap archive verifier additionally smokes FARBFELD,
-QOI, PBM, PGM, and PPM same-format rewrites and exact prefix identify/transcode
-forms.
+QOI, PBM, PGM, PPM, 16-bit PGM/PPM outputs, same-format rewrites, and exact
+prefix identify/transcode forms.
 
 ## Update
 
