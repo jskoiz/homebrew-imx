@@ -16,6 +16,7 @@ png_smoke_required=0
 jpeg_smoke_required=0
 jpeg_orientation_smoke_required=0
 jpeg_progressive_smoke_required=0
+intake_smoke_required=0
 if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   major="${BASH_REMATCH[1]}"
   minor="${BASH_REMATCH[2]}"
@@ -33,6 +34,9 @@ if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   fi
   if ((major > 0 || minor >= 11)); then
     jpeg_progressive_smoke_required=1
+  fi
+  if ((major > 0 || minor >= 12)); then
+    intake_smoke_required=1
   fi
 fi
 
@@ -108,6 +112,14 @@ if [[ "$jpeg_progressive_smoke_required" == 1 ]] && ! grep -Fq 'JPEG:progressive
 fi
 if [[ "$jpeg_progressive_smoke_required" == 1 ]] && ! grep -Fq 'JPEG:progressive-o6.jpg' "$tmp_formula"; then
   echo "error: generated formula does not contain the required progressive JPEG orientation smoke expectation" >&2
+  exit 1
+fi
+if [[ "$intake_smoke_required" == 1 ]] && ! grep -Fq 'PPM:intake-comments.ppm' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.12 intake PPM smoke expectation" >&2
+  exit 1
+fi
+if [[ "$intake_smoke_required" == 1 ]] && ! grep -Fq 'PGM:intake-pgm16.pgm' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.12 intake PGM smoke expectation" >&2
   exit 1
 fi
 bash scripts/check-no-hosted-apple-actions.sh

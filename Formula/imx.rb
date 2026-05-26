@@ -5,13 +5,13 @@ class Imx < Formula
 
   on_linux do
     on_intel do
-      url "https://github.com/jskoiz/imx/releases/download/v0.11.0/imx-preview-0.11.0-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "e92498534717f908cf4dfcc357ed71fd87d2b47850b9faa9a69e68ce9d30eb5f"
+      url "https://github.com/jskoiz/imx/releases/download/v0.12.0/imx-preview-0.12.0-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "7f573ef9406178651fee4c9d6603d674a8d4a41e0ef90f83742ee5b1d339acd3"
     end
 
     on_arm do
-      url "https://github.com/jskoiz/imx/releases/download/v0.11.0/imx-preview-0.11.0-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "23f2fc40bf22915ca9c531b43d21a2b182a073149c0e92bd55b30a6cd4ac9b15"
+      url "https://github.com/jskoiz/imx/releases/download/v0.12.0/imx-preview-0.12.0-aarch64-unknown-linux-gnu.tar.gz"
+      sha256 "fe4cd4747a7c4ffdd09659efdbeb48dc017b6151ccf6ac59553cbb2e55279d09"
     end
   end
 
@@ -65,6 +65,13 @@ class Imx < Formula
     assert_match "format=JPEG width=3 height=4 channels=RGB depth=8", shell_output("#{bin/"imx"} identify JPEG:progressive-o6.jpg")
     system bin/"imx", "JPEG:progressive-o6.jpg", "PPM:progressive-o6.ppm"
     assert_match "format=PPM width=3 height=4 channels=RGB depth=8", shell_output("#{bin/"imx"} identify PPM:progressive-o6.ppm")
+    (testpath/"intake-comments.ppm").write "P3\n# v0.12 intake fixture\n2 1\n1023\n0 512 1023\n1023 256 128\n"
+    (testpath/"intake-pgm16.pgm").write "P5\n2 1\n65535\n\x12\x34\xff\xff".b
+    assert_match "format=PPM width=2 height=1 channels=RGB depth=16", shell_output("#{bin/"imx"} identify PPM:intake-comments.ppm")
+    assert_match "format=PGM width=2 height=1 channels=GRAY depth=16", shell_output("#{bin/"imx"} identify PGM:intake-pgm16.pgm")
+    system bin/"imx", "PPM:intake-comments.ppm", "PGM:intake-comments.pgm"
+    system bin/"imx", "PGM:intake-pgm16.pgm", "FARBFELD:intake-pgm16.ff"
+    assert_match "format=FARBFELD width=2 height=1 channels=RGBA depth=16", shell_output("#{bin/"imx"} identify FARBFELD:intake-pgm16.ff")
     system bin/"imx", "JPEG:output.jpg", "FARBFELD:jpeg-output.ff"
     assert_match "format=FARBFELD width=2 height=1 channels=RGBA depth=16", shell_output("#{bin/"imx"} identify FARBFELD:jpeg-output.ff")
     system bin/"imx", "JPEG:output.jpg", "JPEG:rewrite.jpg"
