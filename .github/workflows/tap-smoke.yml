@@ -66,6 +66,7 @@ jobs:
           expected_version="$(
             ruby -ne 'if $_ =~ %r{/download/v([0-9]+\.[0-9]+\.[0-9]+)/}; puts Regexp.last_match(1); exit; end' Formula/imx.rb
           )"
+          HOMEBREW_NO_AUTO_UPDATE=1 brew untap jskoiz/imx >/dev/null 2>&1 || true
           HOMEBREW_NO_AUTO_UPDATE=1 brew tap jskoiz/imx "$GITHUB_WORKSPACE"
           HOMEBREW_NO_AUTO_UPDATE=1 brew install jskoiz/imx/imx
           HOMEBREW_NO_AUTO_UPDATE=1 brew test jskoiz/imx/imx
