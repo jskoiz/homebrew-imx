@@ -12,11 +12,15 @@ if [[ "$version" != v* ]]; then
 fi
 formula_version="${version#v}"
 prefix_smoke_required=0
+png_smoke_required=0
 if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   major="${BASH_REMATCH[1]}"
   minor="${BASH_REMATCH[2]}"
   if ((major > 0 || minor >= 6)); then
     prefix_smoke_required=1
+  fi
+  if ((major > 0 || minor >= 8)); then
+    png_smoke_required=1
   fi
 fi
 
@@ -68,6 +72,10 @@ if ! grep -Fq 'format=QOI width=2 height=1 channels=RGBA depth=8' "$tmp_formula"
 fi
 if [[ "$prefix_smoke_required" == 1 ]] && ! grep -Fq 'PPM:input.ppm' "$tmp_formula"; then
   echo "error: generated formula does not contain the required prefix smoke expectation" >&2
+  exit 1
+fi
+if [[ "$png_smoke_required" == 1 ]] && ! grep -Fq 'PNG:output.png' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required PNG smoke expectation" >&2
   exit 1
 fi
 bash scripts/check-no-hosted-apple-actions.sh
