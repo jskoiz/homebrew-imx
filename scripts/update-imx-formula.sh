@@ -67,7 +67,7 @@ if ! grep -Fq 'format=QOI width=2 height=1 channels=RGBA depth=8' "$tmp_formula"
   exit 1
 fi
 if [[ "$prefix_smoke_required" == 1 ]] && ! grep -Fq 'PPM:input.ppm' "$tmp_formula"; then
-  echo "error: generated formula does not contain the v0.6 prefix smoke expectation" >&2
+  echo "error: generated formula does not contain the required prefix smoke expectation" >&2
   exit 1
 fi
 bash scripts/check-no-hosted-apple-actions.sh
