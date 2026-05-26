@@ -9,6 +9,10 @@ if [[ ! -f "$formula" ]]; then
   echo "error: formula not found: $formula" >&2
   exit 2
 fi
+if grep -Eq '^[[:space:]]*on_macos[[:space:]]+do\b' "$formula"; then
+  echo "error: hosted tap verification is Linux-only; remove on_macos formula stanzas or use explicit local/manual macOS proof" >&2
+  exit 1
+fi
 
 download() {
   local url="$1"

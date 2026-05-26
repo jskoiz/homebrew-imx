@@ -5,19 +5,25 @@ class Imx < Formula
 
   on_linux do
     on_intel do
-      url "https://github.com/jskoiz/imx/releases/download/v0.8.0/imx-preview-0.8.0-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "1bd1df0b08470d0ae0e1503d1fb24948d16a9a30fc13289ff6aff150e3a02b35"
+      url "https://github.com/jskoiz/imx/releases/download/v0.8.1/imx-preview-0.8.1-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "ef84d39d3c9e61d36a75d5d9ef6b9b04ede4f95c81f64f4009344fb230327da1"
     end
 
     on_arm do
-      url "https://github.com/jskoiz/imx/releases/download/v0.8.0/imx-preview-0.8.0-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "155d24661a6abe30b2911c8f1957644a07a3073bd6f68e877aafac1385a0dd13"
+      url "https://github.com/jskoiz/imx/releases/download/v0.8.1/imx-preview-0.8.1-aarch64-unknown-linux-gnu.tar.gz"
+      sha256 "4ef8b50995139ac59c5719baa55083320dc19a1a0ecd15ee2712f63a01807769"
     end
   end
 
   def install
     bin.install "imx"
     prefix.install "README.md", "COMPATIBILITY.md", "RELEASE_NOTES.md", "PRODUCTION_READINESS.md"
+  end
+
+  def caveats
+    return unless OS.linux?
+
+    "Published Linux archives require glibc 2.34 or newer."
   end
 
   test do

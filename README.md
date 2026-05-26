@@ -11,18 +11,18 @@ brew install imx
 imx --version
 ```
 
-The `imx` formula installs the published IMX `v0.8.0` release archive for the
+The `imx` formula installs the published IMX `v0.8.1` release archive for the
 current supported platform and verifies the release archive checksum declared in
-the formula.
+the formula. Published Linux archives require glibc 2.34 or newer.
 
 Supported tap targets:
 
 - Linux x86_64
 - Linux arm64
 
-No Homebrew/core submission, macOS v0.8.0 tap support, Windows archive, crates.io
+No Homebrew/core submission, macOS v0.8.x tap support, Windows archive, crates.io
 package, APNG/indexed/low-bit PNG, MagickCore/MagickWand API, or full
-ImageMagick CLI compatibility is claimed by the current v0.8.0 tap formula.
+ImageMagick CLI compatibility is claimed by the current v0.8.1 tap formula.
 
 Tap GitHub Actions run a Linux-only formula/archive smoke. macOS install proof
 must be run locally or manually after explicit approval; normal pushes, pull
@@ -33,7 +33,7 @@ Tap updates are automation for the `jskoiz/homebrew-imx` tap only. They do not
 submit to Homebrew/core and must not trigger hosted macOS or iOS GitHub Actions;
 macOS tap proof remains local/manual unless explicitly approved.
 
-Linux arm64 tap support is generated from the published v0.8.0 `SHA256SUMS` and
+Linux arm64 tap support is generated from the published v0.8.1 `SHA256SUMS` and
 verified by Linux-only archive smoke. macOS tap support may be added only after a
 published macOS release archive exists and local/manual macOS proof is recorded
 after explicit approval.
@@ -56,7 +56,7 @@ same-format rewrites, and exact prefix identify/transcode forms.
 To refresh the tap after a future IMX release, run:
 
 ```sh
-scripts/update-imx-formula.sh v0.8.0
+scripts/update-imx-formula.sh v0.8.1
 ```
 
 The updater downloads the release `SHA256SUMS`, runs that release's formula
@@ -74,7 +74,7 @@ Before pushing a tap update, run:
 ```sh
 bash scripts/check-no-hosted-apple-actions.sh
 ruby -c Formula/imx.rb
-bash scripts/verify-formula-archives.sh
+IMX_FORMULA_STATIC_ONLY=1 bash scripts/verify-formula-archives.sh
 ```
 
 ## Remove

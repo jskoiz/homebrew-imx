@@ -66,6 +66,10 @@ awk '
 tmp_formula="$work_dir/imx.rb"
 bash "$work_dir/generate-homebrew-formula.sh" "$version" "$work_dir/SHA256SUMS" "$tmp_formula"
 ruby -c "$tmp_formula"
+if grep -Eq '^[[:space:]]*on_macos[[:space:]]+do\b' "$tmp_formula"; then
+  echo "error: generated formula includes macOS stanzas; v0.8.x tap updates require Linux-only archives unless explicit local/manual macOS proof is recorded" >&2
+  exit 1
+fi
 if ! grep -Fq 'format=QOI width=2 height=1 channels=RGBA depth=8' "$tmp_formula"; then
   echo "error: generated formula does not contain the current QOI RGBA smoke expectation" >&2
   exit 1
