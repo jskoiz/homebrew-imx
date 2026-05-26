@@ -212,6 +212,31 @@ while IFS=$'\t' read -r target url sha; do
   grep -Fx 'format=JPEG width=2 height=2 channels=RGB depth=8' "$smoke_dir/identify-jpeg.txt"
   run_binary identify "JPEG:$smoke_dir/output.jpg" | tee "$smoke_dir/identify-prefix-jpeg.txt"
   grep -Fx 'format=JPEG width=2 height=2 channels=RGB depth=8' "$smoke_dir/identify-prefix-jpeg.txt"
+  printf 'P3\n2 1\n255\n255 0 0 0 0 255\n' >"$smoke_dir/orientation-source.ppm"
+  run_binary "$smoke_dir/orientation-source.ppm" "$smoke_dir/orientation-source.jpg"
+  python3 - "$smoke_dir/orientation-source.jpg" "$smoke_dir/oriented-o6.jpg" <<'PY'
+import sys
+
+source, output = sys.argv[1:3]
+jpeg = open(source, "rb").read()
+app1 = (
+    b"Exif\0\0MM\0*\0\0\0\x08"
+    + (1).to_bytes(2, "big")
+    + (0x0112).to_bytes(2, "big")
+    + (3).to_bytes(2, "big")
+    + (1).to_bytes(4, "big")
+    + (6).to_bytes(2, "big")
+    + b"\0\0"
+    + (0).to_bytes(4, "big")
+)
+segment = b"\xff\xe1" + (len(app1) + 2).to_bytes(2, "big") + app1
+open(output, "wb").write(jpeg[:2] + segment + jpeg[2:])
+PY
+  run_binary identify "JPEG:$smoke_dir/oriented-o6.jpg" | tee "$smoke_dir/identify-orientation-jpeg.txt"
+  grep -Fx 'format=JPEG width=1 height=2 channels=RGB depth=8' "$smoke_dir/identify-orientation-jpeg.txt"
+  run_binary "JPEG:$smoke_dir/oriented-o6.jpg" "PPM:$smoke_dir/oriented-o6.ppm"
+  run_binary identify "PPM:$smoke_dir/oriented-o6.ppm" | tee "$smoke_dir/identify-orientation-ppm.txt"
+  grep -Fx 'format=PPM width=1 height=2 channels=RGB depth=8' "$smoke_dir/identify-orientation-ppm.txt"
   run_binary "JPEG:$smoke_dir/output.jpg" "FARBFELD:$smoke_dir/jpeg-output.ff"
   run_binary identify "FARBFELD:$smoke_dir/jpeg-output.ff" | tee "$smoke_dir/identify-jpeg-output-farbfeld.txt"
   grep -Fx 'format=FARBFELD width=2 height=2 channels=RGBA depth=16' "$smoke_dir/identify-jpeg-output-farbfeld.txt"

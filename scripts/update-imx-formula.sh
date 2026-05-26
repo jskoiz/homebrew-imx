@@ -14,6 +14,7 @@ formula_version="${version#v}"
 prefix_smoke_required=0
 png_smoke_required=0
 jpeg_smoke_required=0
+jpeg_orientation_smoke_required=0
 if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   major="${BASH_REMATCH[1]}"
   minor="${BASH_REMATCH[2]}"
@@ -25,6 +26,9 @@ if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   fi
   if ((major > 0 || minor >= 9)); then
     jpeg_smoke_required=1
+  fi
+  if ((major > 0 || minor >= 10)); then
+    jpeg_orientation_smoke_required=1
   fi
 fi
 
@@ -88,6 +92,10 @@ if [[ "$png_smoke_required" == 1 ]] && ! grep -Fq 'PNG:output.png' "$tmp_formula
 fi
 if [[ "$jpeg_smoke_required" == 1 ]] && ! grep -Fq 'JPEG:output.jpg' "$tmp_formula"; then
   echo "error: generated formula does not contain the required JPEG smoke expectation" >&2
+  exit 1
+fi
+if [[ "$jpeg_orientation_smoke_required" == 1 ]] && ! grep -Fq 'JPEG:oriented-o6.jpg' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required JPEG orientation smoke expectation" >&2
   exit 1
 fi
 bash scripts/check-no-hosted-apple-actions.sh
