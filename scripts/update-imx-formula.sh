@@ -13,6 +13,7 @@ fi
 formula_version="${version#v}"
 prefix_smoke_required=0
 png_smoke_required=0
+jpeg_smoke_required=0
 if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   major="${BASH_REMATCH[1]}"
   minor="${BASH_REMATCH[2]}"
@@ -21,6 +22,9 @@ if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   fi
   if ((major > 0 || minor >= 8)); then
     png_smoke_required=1
+  fi
+  if ((major > 0 || minor >= 9)); then
+    jpeg_smoke_required=1
   fi
 fi
 
@@ -67,7 +71,7 @@ tmp_formula="$work_dir/imx.rb"
 bash "$work_dir/generate-homebrew-formula.sh" "$version" "$work_dir/SHA256SUMS" "$tmp_formula"
 ruby -c "$tmp_formula"
 if grep -Eq '^[[:space:]]*on_macos[[:space:]]+do\b' "$tmp_formula"; then
-  echo "error: generated formula includes macOS stanzas; v0.8.x tap updates require Linux-only archives unless explicit local/manual macOS proof is recorded" >&2
+  echo "error: generated formula includes macOS stanzas; tap updates require Linux-only archives unless explicit local/manual macOS proof is recorded" >&2
   exit 1
 fi
 if ! grep -Fq 'format=QOI width=2 height=1 channels=RGBA depth=8' "$tmp_formula"; then
@@ -80,6 +84,10 @@ if [[ "$prefix_smoke_required" == 1 ]] && ! grep -Fq 'PPM:input.ppm' "$tmp_formu
 fi
 if [[ "$png_smoke_required" == 1 ]] && ! grep -Fq 'PNG:output.png' "$tmp_formula"; then
   echo "error: generated formula does not contain the required PNG smoke expectation" >&2
+  exit 1
+fi
+if [[ "$jpeg_smoke_required" == 1 ]] && ! grep -Fq 'JPEG:output.jpg' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required JPEG smoke expectation" >&2
   exit 1
 fi
 bash scripts/check-no-hosted-apple-actions.sh
