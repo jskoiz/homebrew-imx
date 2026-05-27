@@ -5,13 +5,13 @@ class Imx < Formula
 
   on_linux do
     on_intel do
-      url "https://github.com/jskoiz/imx/releases/download/v0.16.0/imx-preview-0.16.0-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "56587f810f66481bcaa9478a0d362b7723d8cd5f541d9284e5067c0c33aa5323"
+      url "https://github.com/jskoiz/imx/releases/download/v0.17.0/imx-preview-0.17.0-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "67396127734e5924fd73b3c86b19520631aa206d017e30d1a781b57aba01512b"
     end
 
     on_arm do
-      url "https://github.com/jskoiz/imx/releases/download/v0.16.0/imx-preview-0.16.0-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "d4b98b4d850375aea1f3ac8bfc8592c9181fecd472dadd5b11bc452f196a6247"
+      url "https://github.com/jskoiz/imx/releases/download/v0.17.0/imx-preview-0.17.0-aarch64-unknown-linux-gnu.tar.gz"
+      sha256 "7bdc76f76c20a1d5012f9d664b57d6b6a46b01237e4693b5d99721717e44db10"
     end
   end
 
@@ -31,6 +31,7 @@ class Imx < Formula
     assert_match "format=PPM width=2 height=1 channels=RGB depth=8", shell_output("#{bin/"imx"} identify input.ppm")
     system bin/"imx", "input.ppm", "output.qoi"
     assert_match "format=QOI width=2 height=1 channels=RGBA depth=8", shell_output("#{bin/"imx"} identify output.qoi")
+    system bin/"imx", "self-test"
     assert_match "format=PPM width=2 height=1 channels=RGB depth=8", shell_output("#{bin/"imx"} identify PPM:input.ppm")
     assert_match "format=QOI width=2 height=1 channels=RGBA depth=8", shell_output("#{bin/"imx"} identify QOI:output.qoi")
     system bin/"imx", "PPM:input.ppm", "FARBFELD:prefix-output.ff"

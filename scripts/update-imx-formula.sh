@@ -21,6 +21,7 @@ resize_smoke_required=0
 resize_fit_smoke_required=0
 batch_convert_smoke_required=0
 bmp_smoke_required=0
+self_test_smoke_required=0
 if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   major="${BASH_REMATCH[1]}"
   minor="${BASH_REMATCH[2]}"
@@ -53,6 +54,9 @@ if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   fi
   if ((major > 0 || minor >= 16)); then
     bmp_smoke_required=1
+  fi
+  if ((major > 0 || minor >= 17)); then
+    self_test_smoke_required=1
   fi
 fi
 
@@ -168,6 +172,10 @@ if [[ "$bmp_smoke_required" == 1 ]] && ! grep -Fq 'BMP:output.bmp' "$tmp_formula
 fi
 if [[ "$bmp_smoke_required" == 1 ]] && ! grep -Fq '"batch-convert", "--to", "BMP", "--output-dir", "batch-bmp"' "$tmp_formula"; then
   echo "error: generated formula does not contain the required v0.16 BMP batch-convert expectation" >&2
+  exit 1
+fi
+if [[ "$self_test_smoke_required" == 1 ]] && ! grep -Fq 'system bin/"imx", "self-test"' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.17 self-test expectation" >&2
   exit 1
 fi
 bash scripts/check-no-hosted-apple-actions.sh

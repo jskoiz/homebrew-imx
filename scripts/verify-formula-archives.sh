@@ -139,6 +139,14 @@ while IFS=$'\t' read -r target url sha; do
       grep -Eiq 'aarch64|arm64' "$target_dir/file.txt"
       read -r -a runner <<<"${IMX_FORMULA_ARM64_RUNNER:-qemu-aarch64 -L /usr/aarch64-linux-gnu}"
       read -r -a linkage_command <<<"${IMX_FORMULA_ARM64_LINKAGE:-aarch64-linux-gnu-readelf -d}"
+      if [[ -z "${QEMU_LD_PREFIX:-}" ]]; then
+        for ((i = 0; i < ${#runner[@]} - 1; i++)); do
+          if [[ "${runner[$i]}" == "-L" ]]; then
+            export QEMU_LD_PREFIX="${runner[$((i + 1))]}"
+            break
+          fi
+        done
+      fi
       ;;
   esac
 
@@ -172,6 +180,13 @@ while IFS=$'\t' read -r target url sha; do
   if [[ "$version_output" != "imx $version" ]]; then
     echo "error: expected imx $version, got $version_output" >&2
     exit 1
+  fi
+  if [[ "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+    major="${BASH_REMATCH[1]}"
+    minor="${BASH_REMATCH[2]}"
+    if ((major > 0 || minor >= 17)); then
+      run_binary self-test
+    fi
   fi
   "${linkage_command[@]}" "$binary" | tee "$target_dir/linkage.txt"
   ! grep -E 'Magick(Core|Wand)|ImageMagick' "$target_dir/linkage.txt"
