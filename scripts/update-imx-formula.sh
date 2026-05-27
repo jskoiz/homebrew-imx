@@ -18,6 +18,7 @@ jpeg_orientation_smoke_required=0
 jpeg_progressive_smoke_required=0
 intake_smoke_required=0
 resize_smoke_required=0
+resize_fit_smoke_required=0
 if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   major="${BASH_REMATCH[1]}"
   minor="${BASH_REMATCH[2]}"
@@ -41,6 +42,9 @@ if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   fi
   if ((major > 0 || minor >= 13)); then
     resize_smoke_required=1
+  fi
+  if ((major > 0 || minor >= 14)); then
+    resize_fit_smoke_required=1
   fi
 fi
 
@@ -132,6 +136,14 @@ if [[ "$resize_smoke_required" == 1 ]] && ! grep -Fq '"resize", "1x1", "PPM:inpu
 fi
 if [[ "$resize_smoke_required" == 1 ]] && ! grep -Fq 'format=PPM width=1 height=1 channels=RGB depth=8' "$tmp_formula"; then
   echo "error: generated formula does not contain the required v0.13 resize identify expectation" >&2
+  exit 1
+fi
+if [[ "$resize_fit_smoke_required" == 1 ]] && ! grep -Fq '"resize-fit", "5x5", "PPM:input.ppm", "PPM:fit.ppm"' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.14 resize-fit smoke expectation" >&2
+  exit 1
+fi
+if [[ "$resize_fit_smoke_required" == 1 ]] && ! grep -Fq 'format=PPM width=5 height=3 channels=RGB depth=8' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.14 resize-fit identify expectation" >&2
   exit 1
 fi
 bash scripts/check-no-hosted-apple-actions.sh

@@ -5,13 +5,13 @@ class Imx < Formula
 
   on_linux do
     on_intel do
-      url "https://github.com/jskoiz/imx/releases/download/v0.13.0/imx-preview-0.13.0-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "b44d4f2761557fe43d1b74d57d46012f8e004838dce418111086d9b093846c2a"
+      url "https://github.com/jskoiz/imx/releases/download/v0.14.0/imx-preview-0.14.0-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "c48f51259e4ee8ebd004c40661dc4859b52e6c3a81b41fde3cd20b9f320d03e0"
     end
 
     on_arm do
-      url "https://github.com/jskoiz/imx/releases/download/v0.13.0/imx-preview-0.13.0-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "c9fba6c37c35a11a599fc9cbd473f1b4d04dd4a94695d05076da3a5c7331780c"
+      url "https://github.com/jskoiz/imx/releases/download/v0.14.0/imx-preview-0.14.0-aarch64-unknown-linux-gnu.tar.gz"
+      sha256 "86d646cd12608c058b51607f03e553e602d45c29aed39df52c4b1ff0fd126ed8"
     end
   end
 
@@ -74,6 +74,8 @@ class Imx < Formula
     assert_match "format=FARBFELD width=2 height=1 channels=RGBA depth=16", shell_output("#{bin/"imx"} identify FARBFELD:intake-pgm16.ff")
     system bin/"imx", "resize", "1x1", "PPM:input.ppm", "PPM:resized.ppm"
     assert_match "format=PPM width=1 height=1 channels=RGB depth=8", shell_output("#{bin/"imx"} identify PPM:resized.ppm")
+    system bin/"imx", "resize-fit", "5x5", "PPM:input.ppm", "PPM:fit.ppm"
+    assert_match "format=PPM width=5 height=3 channels=RGB depth=8", shell_output("#{bin/"imx"} identify PPM:fit.ppm")
     system bin/"imx", "JPEG:output.jpg", "FARBFELD:jpeg-output.ff"
     assert_match "format=FARBFELD width=2 height=1 channels=RGBA depth=16", shell_output("#{bin/"imx"} identify FARBFELD:jpeg-output.ff")
     system bin/"imx", "JPEG:output.jpg", "JPEG:rewrite.jpg"
