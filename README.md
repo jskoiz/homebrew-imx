@@ -11,7 +11,7 @@ brew install imx
 imx --version
 ```
 
-The `imx` formula installs the published IMX `v0.15.0` release archive for the
+The `imx` formula installs the published IMX `v0.16.0` release archive for the
 current supported platform and verifies the release archive checksum declared in
 the formula. Published Linux archives require glibc 2.34 or newer. The glibc
 symbol ceiling is proven by IMX release/archive smoke for the same published
@@ -22,11 +22,12 @@ Supported tap targets:
 - Linux x86_64
 - Linux arm64
 
-No Homebrew/core submission, macOS v0.15.0 tap support, Windows archive,
-crates.io package, APNG/indexed/low-bit PNG, CMYK/high-depth JPEG, progressive
-JPEG output, EXIF writing or preservation, GPS handling, color-management/profile
-transforms, MagickCore/MagickWand API, or full ImageMagick CLI compatibility is
-claimed by the current v0.15.0 tap formula.
+No Homebrew/core submission, macOS v0.16.0 tap support, Windows archive,
+crates.io package, APNG/indexed/low-bit PNG, CMYK/high-depth JPEG, compressed,
+indexed, high-depth, or color-table BMP, progressive JPEG output, EXIF writing
+or preservation, GPS handling, color-management/profile transforms,
+MagickCore/MagickWand API, or full ImageMagick CLI compatibility is claimed by
+the current v0.16.0 tap formula.
 
 Tap GitHub Actions run a Linux-only formula/archive smoke. macOS install proof
 must be run locally or manually after explicit approval; normal pushes, pull
@@ -37,7 +38,7 @@ Tap updates are automation for the `jskoiz/homebrew-imx` tap only. They do not
 submit to Homebrew/core and must not trigger hosted macOS or iOS GitHub Actions;
 macOS tap proof remains local/manual unless explicitly approved.
 
-Linux arm64 tap support is generated from the published v0.15.0 `SHA256SUMS` and
+Linux arm64 tap support is generated from the published v0.16.0 `SHA256SUMS` and
 verified by Linux-only archive smoke. macOS tap support may be added only after a
 published macOS release archive exists and local/manual macOS proof is recorded
 after explicit approval.
@@ -49,25 +50,25 @@ brew test imx
 imx identify path/to/input.ppm
 ```
 
-The formula test identifies a small PPM fixture, transcodes it to QOI, PNG, and
-JPEG, checks exact `PPM:`, `QOI:`, `PNG:`, `JPEG:`, and `FARBFELD:` prefixes,
-checks JPEG EXIF Orientation 6 identify/transcode normalization, checks
-progressive JPEG identify/transcode plus progressive Orientation 6
-normalization, checks v0.12 PPM/PGM intake fixtures, and checks deterministic
-PPM/JPEG same-format rewrites, plus the v0.13 exact resize command and v0.14
-resize-fit command and v0.15 batch-convert command. The tap
-archive verifier additionally smokes
-FARBFELD, JPEG, QOI, PBM, PGM, PNG, PPM,
-16-bit PGM/PNG/PPM outputs, same-format rewrites, orientation normalization,
+The formula test identifies a small PPM fixture, transcodes it to QOI, PNG,
+JPEG, and BMP, checks exact `PPM:`, `QOI:`, `PNG:`, `JPEG:`, `FARBFELD:`, and
+`BMP:` prefixes, checks JPEG EXIF Orientation 6 identify/transcode
+normalization, checks progressive JPEG identify/transcode plus progressive
+Orientation 6 normalization, checks v0.12 PPM/PGM intake fixtures, and checks
+deterministic PPM/JPEG/BMP same-format rewrites, plus the v0.13 exact resize
+command, v0.14 resize-fit command, v0.15 batch-convert command, and v0.16 BMP
+resize/resize-fit/batch-convert command coverage. The tap archive verifier
+additionally smokes FARBFELD, BMP, JPEG, QOI, PBM, PGM, PNG, PPM, 16-bit
+PGM/PNG/PPM outputs, same-format rewrites, orientation normalization,
 progressive JPEG input, v0.12 intake paths, v0.13 resize, v0.14 resize-fit,
-v0.15 batch-convert, and exact prefix identify/transcode forms.
+v0.15 batch-convert, v0.16 BMP, and exact prefix identify/transcode forms.
 
 ## Update
 
 To refresh the tap after a future IMX release, run:
 
 ```sh
-scripts/update-imx-formula.sh v0.15.0
+scripts/update-imx-formula.sh v0.16.0
 ```
 
 The updater downloads the release `SHA256SUMS`, runs that release's formula
