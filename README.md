@@ -13,7 +13,9 @@ imx --version
 
 The `imx` formula installs the published IMX `v0.12.0` release archive for the
 current supported platform and verifies the release archive checksum declared in
-the formula. Published Linux archives require glibc 2.34 or newer.
+the formula. Published Linux archives require glibc 2.34 or newer. The glibc
+symbol ceiling is proven by IMX release/archive smoke for the same published
+checksummed archives; tap smoke verifies formula checksums and runtime behavior.
 
 Supported tap targets:
 
