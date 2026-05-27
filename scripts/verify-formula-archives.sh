@@ -367,7 +367,7 @@ PY
   run_binary identify "PPM:$smoke_dir/prefix-output.ppm" | tee "$smoke_dir/identify-prefix-output-ppm.txt"
   grep -Fx 'format=PPM width=2 height=2 channels=RGB depth=16' "$smoke_dir/identify-prefix-output-ppm.txt"
   run_binary identify "BMP:$smoke_dir/prefix-output.bmp" | tee "$smoke_dir/identify-prefix-output-bmp.txt"
-  grep -Fx 'format=BMP width=2 height=2 channels=RGB depth=8' "$smoke_dir/identify-prefix-output-bmp.txt"
+  grep -Fx 'format=BMP width=2 height=2 channels=RGBA depth=8' "$smoke_dir/identify-prefix-output-bmp.txt"
 done <"$records_file"
 
 echo "$work_dir"
