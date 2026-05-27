@@ -5,13 +5,13 @@ class Imx < Formula
 
   on_linux do
     on_intel do
-      url "https://github.com/jskoiz/imx/releases/download/v0.14.0/imx-preview-0.14.0-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "c48f51259e4ee8ebd004c40661dc4859b52e6c3a81b41fde3cd20b9f320d03e0"
+      url "https://github.com/jskoiz/imx/releases/download/v0.15.0/imx-preview-0.15.0-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "41d346e87dfa4249fbd852938b612cfbbb2aa1366a6ed3ec9f58c846e7fc3cee"
     end
 
     on_arm do
-      url "https://github.com/jskoiz/imx/releases/download/v0.14.0/imx-preview-0.14.0-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "86d646cd12608c058b51607f03e553e602d45c29aed39df52c4b1ff0fd126ed8"
+      url "https://github.com/jskoiz/imx/releases/download/v0.15.0/imx-preview-0.15.0-aarch64-unknown-linux-gnu.tar.gz"
+      sha256 "9a1aba01202336525b8528caa010e42db17eabed04b0535c3928e601319ccd16"
     end
   end
 
@@ -76,6 +76,12 @@ class Imx < Formula
     assert_match "format=PPM width=1 height=1 channels=RGB depth=8", shell_output("#{bin/"imx"} identify PPM:resized.ppm")
     system bin/"imx", "resize-fit", "5x5", "PPM:input.ppm", "PPM:fit.ppm"
     assert_match "format=PPM width=5 height=3 channels=RGB depth=8", shell_output("#{bin/"imx"} identify PPM:fit.ppm")
+    mkdir "batch"
+    (testpath/"batch-ppm.ppm").write "P3\n2 1\n255\n255 0 0 0 0 255\n"
+    (testpath/"batch-pgm.pgm").write "P2\n2 1\n255\n0 255\n"
+    system bin/"imx", "batch-convert", "--to", "PPM", "--output-dir", "batch", "--resize-fit", "5x5", "PPM:batch-ppm.ppm", "PGM:batch-pgm.pgm"
+    assert_match "format=PPM width=5 height=3 channels=RGB depth=8", shell_output("#{bin/"imx"} identify PPM:batch/batch-ppm.ppm")
+    assert_match "format=PPM width=5 height=3 channels=RGB depth=8", shell_output("#{bin/"imx"} identify PPM:batch/batch-pgm.ppm")
     system bin/"imx", "JPEG:output.jpg", "FARBFELD:jpeg-output.ff"
     assert_match "format=FARBFELD width=2 height=1 channels=RGBA depth=16", shell_output("#{bin/"imx"} identify FARBFELD:jpeg-output.ff")
     system bin/"imx", "JPEG:output.jpg", "JPEG:rewrite.jpg"

@@ -19,6 +19,7 @@ jpeg_progressive_smoke_required=0
 intake_smoke_required=0
 resize_smoke_required=0
 resize_fit_smoke_required=0
+batch_convert_smoke_required=0
 if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   major="${BASH_REMATCH[1]}"
   minor="${BASH_REMATCH[2]}"
@@ -45,6 +46,9 @@ if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   fi
   if ((major > 0 || minor >= 14)); then
     resize_fit_smoke_required=1
+  fi
+  if ((major > 0 || minor >= 15)); then
+    batch_convert_smoke_required=1
   fi
 fi
 
@@ -144,6 +148,14 @@ if [[ "$resize_fit_smoke_required" == 1 ]] && ! grep -Fq '"resize-fit", "5x5", "
 fi
 if [[ "$resize_fit_smoke_required" == 1 ]] && ! grep -Fq 'format=PPM width=5 height=3 channels=RGB depth=8' "$tmp_formula"; then
   echo "error: generated formula does not contain the required v0.14 resize-fit identify expectation" >&2
+  exit 1
+fi
+if [[ "$batch_convert_smoke_required" == 1 ]] && ! grep -Fq '"batch-convert", "--to", "PPM", "--output-dir", "batch", "--resize-fit", "5x5", "PPM:batch-ppm.ppm", "PGM:batch-pgm.pgm"' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.15 batch-convert smoke expectation" >&2
+  exit 1
+fi
+if [[ "$batch_convert_smoke_required" == 1 ]] && ! grep -Fq 'PPM:batch/batch-ppm.ppm' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.15 batch-convert identify expectation" >&2
   exit 1
 fi
 bash scripts/check-no-hosted-apple-actions.sh
