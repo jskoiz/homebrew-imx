@@ -23,6 +23,7 @@ batch_convert_smoke_required=0
 bmp_smoke_required=0
 self_test_smoke_required=0
 json_smoke_required=0
+json_diagnostic_smoke_required=0
 if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   major="${BASH_REMATCH[1]}"
   minor="${BASH_REMATCH[2]}"
@@ -61,6 +62,9 @@ if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   fi
   if ((major > 0 || minor >= 18)); then
     json_smoke_required=1
+  fi
+  if ((major > 0 || minor >= 19)); then
+    json_diagnostic_smoke_required=1
   fi
 fi
 
@@ -192,6 +196,18 @@ if [[ "$json_smoke_required" == 1 ]] && ! grep -Fq 'report --json PPM:input.ppm'
 fi
 if [[ "$json_smoke_required" == 1 ]] && ! grep -Fq 'require "json"' "$tmp_formula"; then
   echo "error: generated formula does not contain the required v0.18 JSON parser smoke setup" >&2
+  exit 1
+fi
+if [[ "$json_diagnostic_smoke_required" == 1 ]] && ! grep -Fq 'report --json GIF:input.ppm' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.19 unsupported-prefix diagnostic smoke" >&2
+  exit 1
+fi
+if [[ "$json_diagnostic_smoke_required" == 1 ]] && ! grep -Fq 'report --json QOI:input.ppm' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.19 prefix-mismatch report smoke" >&2
+  exit 1
+fi
+if [[ "$json_diagnostic_smoke_required" == 1 ]] && ! grep -Fq 'identify --json QOI:input.ppm' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.19 prefix-mismatch identify smoke" >&2
   exit 1
 fi
 bash scripts/check-no-hosted-apple-actions.sh

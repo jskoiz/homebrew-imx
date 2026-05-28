@@ -182,6 +182,7 @@ while IFS=$'\t' read -r target url sha; do
     exit 1
   fi
   json_smoke_supported=0
+  json_diagnostic_smoke_supported=0
   if [[ "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
     major="${BASH_REMATCH[1]}"
     minor="${BASH_REMATCH[2]}"
@@ -190,6 +191,9 @@ while IFS=$'\t' read -r target url sha; do
     fi
     if ((major > 0 || minor >= 18)); then
       json_smoke_supported=1
+    fi
+    if ((major > 0 || minor >= 19)); then
+      json_diagnostic_smoke_supported=1
     fi
   fi
   "${linkage_command[@]}" "$binary" | tee "$target_dir/linkage.txt"
@@ -214,6 +218,21 @@ while IFS=$'\t' read -r target url sha; do
     grep -Fx '{"schema_version":1,"format":"PPM","width":2,"height":2,"channels":"RGB","depth":8}' "$smoke_dir/identify-json-ppm.txt"
     run_binary report --json "PPM:$smoke_dir/input.ppm" | tee "$smoke_dir/report-json-ppm.txt"
     grep -Fx '{"schema_version":1,"status":"supported","diagnostic_code":null,"format":"PPM","width":2,"height":2,"channels":"RGB","depth":8}' "$smoke_dir/report-json-ppm.txt"
+  fi
+  if [[ "$json_diagnostic_smoke_supported" == 1 ]]; then
+    run_binary report --json "GIF:$smoke_dir/input.ppm" | tee "$smoke_dir/report-json-unsupported-prefix.txt"
+    grep -F '"diagnostic_code":"input.unsupported_format_prefix"' "$smoke_dir/report-json-unsupported-prefix.txt"
+    run_binary report --json "QOI:$smoke_dir/input.ppm" | tee "$smoke_dir/report-json-prefix-mismatch.txt"
+    grep -F '"diagnostic_code":"input.format_prefix_mismatch"' "$smoke_dir/report-json-prefix-mismatch.txt"
+    set +e
+    run_binary identify --json "QOI:$smoke_dir/input.ppm" >"$smoke_dir/identify-json-prefix-mismatch.txt" 2>&1
+    identify_status=$?
+    set -e
+    if [[ "$identify_status" -ne 1 ]]; then
+      echo "error: identify --json QOI:input.ppm exited $identify_status, expected 1" >&2
+      exit 1
+    fi
+    grep -F '"diagnostic_code":"input.format_prefix_mismatch"' "$smoke_dir/identify-json-prefix-mismatch.txt"
   fi
   run_binary identify "PGM:$smoke_dir/input.pgm" | tee "$smoke_dir/identify-prefix-pgm.txt"
   grep -Fx 'format=PGM width=2 height=2 channels=GRAY depth=8' "$smoke_dir/identify-prefix-pgm.txt"
