@@ -5,13 +5,13 @@ class Imx < Formula
 
   on_linux do
     on_intel do
-      url "https://github.com/jskoiz/imx/releases/download/v0.17.0/imx-preview-0.17.0-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "67396127734e5924fd73b3c86b19520631aa206d017e30d1a781b57aba01512b"
+      url "https://github.com/jskoiz/imx/releases/download/v0.18.0/imx-preview-0.18.0-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "1868eaa8ca78e38c1529c262c67ddafd91afab15a5211d02d6b56ef49d0f57fd"
     end
 
     on_arm do
-      url "https://github.com/jskoiz/imx/releases/download/v0.17.0/imx-preview-0.17.0-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "7bdc76f76c20a1d5012f9d664b57d6b6a46b01237e4693b5d99721717e44db10"
+      url "https://github.com/jskoiz/imx/releases/download/v0.18.0/imx-preview-0.18.0-aarch64-unknown-linux-gnu.tar.gz"
+      sha256 "bdbb7413c95d5c4ecafc90e38a423dfe8ea8263f0afaf39bae8dd202985071c6"
     end
   end
 
@@ -32,6 +32,18 @@ class Imx < Formula
     system bin/"imx", "input.ppm", "output.qoi"
     assert_match "format=QOI width=2 height=1 channels=RGBA depth=8", shell_output("#{bin/"imx"} identify output.qoi")
     system bin/"imx", "self-test"
+    require "json"
+    identify_json = JSON.parse(shell_output("#{bin/"imx"} identify --json PPM:input.ppm"))
+    assert_equal 1, identify_json.fetch("schema_version")
+    assert_equal "PPM", identify_json.fetch("format")
+    assert_equal 2, identify_json.fetch("width")
+    assert_equal 1, identify_json.fetch("height")
+    assert_equal "RGB", identify_json.fetch("channels")
+    assert_equal 8, identify_json.fetch("depth")
+    report_json = JSON.parse(shell_output("#{bin/"imx"} report --json PPM:input.ppm"))
+    assert_equal "supported", report_json.fetch("status")
+    assert_nil report_json.fetch("diagnostic_code")
+    assert_equal "PPM", report_json.fetch("format")
     assert_match "format=PPM width=2 height=1 channels=RGB depth=8", shell_output("#{bin/"imx"} identify PPM:input.ppm")
     assert_match "format=QOI width=2 height=1 channels=RGBA depth=8", shell_output("#{bin/"imx"} identify QOI:output.qoi")
     system bin/"imx", "PPM:input.ppm", "FARBFELD:prefix-output.ff"

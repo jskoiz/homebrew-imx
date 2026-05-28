@@ -22,6 +22,7 @@ resize_fit_smoke_required=0
 batch_convert_smoke_required=0
 bmp_smoke_required=0
 self_test_smoke_required=0
+json_smoke_required=0
 if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   major="${BASH_REMATCH[1]}"
   minor="${BASH_REMATCH[2]}"
@@ -57,6 +58,9 @@ if [[ "$formula_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   fi
   if ((major > 0 || minor >= 17)); then
     self_test_smoke_required=1
+  fi
+  if ((major > 0 || minor >= 18)); then
+    json_smoke_required=1
   fi
 fi
 
@@ -176,6 +180,18 @@ if [[ "$bmp_smoke_required" == 1 ]] && ! grep -Fq '"batch-convert", "--to", "BMP
 fi
 if [[ "$self_test_smoke_required" == 1 ]] && ! grep -Fq 'system bin/"imx", "self-test"' "$tmp_formula"; then
   echo "error: generated formula does not contain the required v0.17 self-test expectation" >&2
+  exit 1
+fi
+if [[ "$json_smoke_required" == 1 ]] && ! grep -Fq 'identify --json PPM:input.ppm' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.18 identify JSON smoke expectation" >&2
+  exit 1
+fi
+if [[ "$json_smoke_required" == 1 ]] && ! grep -Fq 'report --json PPM:input.ppm' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.18 report JSON smoke expectation" >&2
+  exit 1
+fi
+if [[ "$json_smoke_required" == 1 ]] && ! grep -Fq 'require "json"' "$tmp_formula"; then
+  echo "error: generated formula does not contain the required v0.18 JSON parser smoke setup" >&2
   exit 1
 fi
 bash scripts/check-no-hosted-apple-actions.sh
